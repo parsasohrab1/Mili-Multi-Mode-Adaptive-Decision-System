@@ -1,5 +1,26 @@
 # Mili-Multi-Mode-Adaptive-Decision-System
 
+**Multi-Mode Adaptive Decision System** — adaptive operational-mode selection for UAV missions (STM32H7 target, 10 Hz, 6 modes).
+
+## Quick Start
+
+```bash
+pip install -r requirements.txt
+python scripts/generate_mission_data.py --scenarios 400
+cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build
+ctest --test-dir build -C Release --output-on-failure
+```
+
+**Windows:** use `C:\mili-build` as build dir to avoid MAX_PATH — see [docs/INSTALL.md](docs/INSTALL.md).
+
+| Guide | Link |
+|-------|------|
+| Install & troubleshoot | [docs/INSTALL.md](docs/INSTALL.md) |
+| Build (incl. Windows) | [docs/BUILD.md](docs/BUILD.md) |
+| All documentation | [docs/README.md](docs/README.md) |
+
+---
+
 سامانه تصمیم‌گیری تطبیقی چندحالته
 Multi-Mode Adaptive Decision System
 1. مقدمه (Introduction)

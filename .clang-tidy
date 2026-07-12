@@ -1,0 +1,21 @@
+---
+Checks: >
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-narrowing-conversions,
+  -bugprone-implicit-widening-of-multiplication-result,
+  clang-analyzer-*,
+  -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
+  modernize-use-nullptr,
+  modernize-use-override,
+  readability-braces-around-statements,
+  readability-identifier-naming,
+  -readability-magic-numbers,
+  -readability-function-cognitive-complexity,
+  performance-*,
+  -performance-no-int-to-ptr,
+  portability-*,
+  -portability-simd-intrinsics
+WarningsAsErrors: ''
+HeaderFilterRegex: 'include/mili/.*'
+FormatStyle: none

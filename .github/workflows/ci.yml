@@ -1,0 +1,195 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+jobs:
+  build-and-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate validation dataset
+        run: python scripts/generate_mission_data.py --scenarios 400
+
+      - name: Generate HIL field scenarios (G1)
+        run: python scripts/generate_hil_scenarios.py
+
+      - name: Configure CMake
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+        if: runner.os == 'Linux'
+
+      - name: Configure CMake (Windows)
+        run: cmake -B C:/mili-build -S .
+        if: runner.os == 'Windows'
+
+      - name: Build
+        run: cmake --build build --config Release
+        if: runner.os == 'Linux'
+
+      - name: Build (Windows)
+        run: cmake --build C:/mili-build --config Release
+        if: runner.os == 'Windows'
+
+      - name: Run tests
+        run: ctest --test-dir build -C Release --output-on-failure
+        if: runner.os == 'Linux'
+
+      - name: Run tests (Windows)
+        run: ctest --test-dir C:/mili-build -C Release --output-on-failure
+        if: runner.os == 'Windows'
+
+      - name: Run reporting tests (E1-E5)
+        run: ctest --test-dir build -C Release -R ReportingTests --output-on-failure
+        if: runner.os == 'Linux'
+
+      - name: Run reporting tests (Windows)
+        run: ctest --test-dir C:/mili-build -C Release -R ReportingTests --output-on-failure
+        if: runner.os == 'Windows'
+
+      - name: Analyze decision log export (E2)
+        run: python scripts/analyze_decisions.py test_export.csv
+        if: runner.os == 'Linux'
+
+      - name: Analyze decision log export (Windows)
+        run: python scripts/analyze_decisions.py test_export.csv
+        if: runner.os == 'Windows'
+
+      - name: Validate scoring (Python cross-check)
+        run: python scripts/validate_scoring.py
+
+      - name: Validate runtime weights (Phase 2)
+        run: python scripts/validate_weights.py
+
+      - name: Calibrate weights from field data (A4)
+        run: python scripts/calibrate_weights.py --csv data/field_calibration_data.csv
+
+      - name: Run embedded module tests (B1-B7)
+        run: ctest --test-dir build -C Release -R EmbeddedTests --output-on-failure
+        if: runner.os == 'Linux'
+
+      - name: Run embedded module tests (Windows)
+        run: ctest --test-dir C:/mili-build -C Release -R EmbeddedTests --output-on-failure
+        if: runner.os == 'Windows'
+
+      - name: Run simulator
+        run: ./build/mili_simulator
+        if: runner.os == 'Linux'
+
+      - name: Run simulator (Windows)
+        run: C:/mili-build/Release/mili_simulator.exe
+        if: runner.os == 'Windows'
+
+  field-qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate HIL scenarios (G1)
+        run: python scripts/generate_hil_scenarios.py
+
+      - name: Configure and build
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
+
+      - name: Field QA regression suite (G4)
+        run: ctest --test-dir build -C Release -R 'FieldQaTests|EmbeddedTests|HilTests' --output-on-failure
+
+      - name: Soak test CI profile (G2)
+        run: MILI_SOAK_CYCLES=3600 ctest --test-dir build -C Release -R FieldQaTests --output-on-failure
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lcov
+          pip install -r requirements.txt
+
+      - name: Generate validation dataset
+        run: python scripts/generate_mission_data.py --scenarios 400
+
+      - name: Build with coverage (F4)
+        run: bash scripts/coverage.sh
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: build/coverage-html
+
+  static-analysis:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tools (F5)
+        run: sudo apt-get update && sudo apt-get install -y clang-tidy cppcheck
+
+      - name: Run static analysis
+        run: bash scripts/static_analysis.sh
+
+  embedded-cross:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ARM toolchain (F6)
+        run: sudo apt-get update && sudo apt-get install -y gcc-arm-none-eabi
+
+      - name: Cross-compile STM32 firmware
+        run: bash scripts/build_stm32.sh
+
+      - name: Upload firmware artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mili_stm32_firmware
+          path: build-stm32/platform/stm32/mili_stm32_firmware
+
+  python-data:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate mission data
+        run: python scripts/generate_mission_data.py --scenarios 400
+
+      - name: Validate scoring against CSV
+        run: python scripts/validate_scoring.py
