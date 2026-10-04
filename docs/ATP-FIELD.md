@@ -94,4 +94,4 @@ Windows: use `C:\mili-build` per [INSTALL.md](INSTALL.md).
 
 ---
 
-*تست میدانی: سناریوهای واقعی پهپاد از طریق HIL replay؛ تست ۷۲ ساعته روی embedded با soak runner؛ E2E از سنسور تا CAN کنترل.*
+*Field test: real drone scenarios via HIL replay; 72-hour test on embedded with a soak runner; E2E from sensor to CAN control.*

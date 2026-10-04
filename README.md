@@ -21,106 +21,106 @@ ctest --test-dir build -C Release --output-on-failure
 
 ---
 
-سامانه تصمیم‌گیری تطبیقی چندحالته
 Multi-Mode Adaptive Decision System
-1. مقدمه (Introduction)
-1.1 هدف (Purpose)
-این سند مشخصات کامل سامانه تصمیم‌گیری هوشمند برای انتخاب خودکار بهترین حالت عملیاتی پهپاد بر اساس شرایط محیطی و مأموریت را تشریح می‌کند.
+Multi-Mode Adaptive Decision System
+1. Introduction
+1.1 Purpose
+This document describes the complete specification of an intelligent decision system that automatically selects the best drone operating mode based on environmental and mission conditions.
 
-1.2 محدوده (Scope)
-۶ حالت عملیاتی: شناسایی، نظارت، تعقیب، گشت‌زنی، بازگشت، درگیری
+1.2 Scope
+6 operating modes: reconnaissance, surveillance, pursuit, loiter, return, engagement
 
-تصمیم‌گیری مبتنی بر ۵ مؤلفه: باتری، تهدید، ارتباط، دید، اولویت
+Decision-making based on 5 components: battery, threat, communication, visibility, priority
 
-بهینه‌سازی همزمان انرژی، موفقیت مأموریت و بقا
+Simultaneous optimization of energy, mission success and survival
 
-نرخ به‌روزرسانی: ۱۰ هرتز
+Update rate: 10 Hz
 
-1.3 اصطلاحات و اختصارات
-اختصار	توضیح
+1.3 Definitions and Acronyms
+Acronym	Description
 MCDM	Multi-Criteria Decision Making
 TOPSIS	Technique for Order of Preference by Similarity to Ideal Solution
-FSM	Finite State Machine - ماشین حالت محدود
-QoS	Quality of Service - کیفیت سرویس
-2. الزامات کلی
-2.1 پرسپکتیو محصول
-این سامانه به عنوان لایه تصمیم‌گیرنده بر روی پردازنده اصلی (STM32H7) اجرا می‌شود و از داده‌های حسگرها و محصولات ۱ و ۲ استفاده می‌کند.
+FSM	Finite State Machine
+QoS	Quality of Service
+2. Overall Requirements
+2.1 Product Perspective
+This system runs as the decision layer on the main processor (STM32H7) and uses sensor data and the outputs of products 1 and 2.
 
 text
 ┌─────────────────────────────────────────────────┐
-│         سامانه تصمیم‌گیری تطبیقی               │
+│         Adaptive Decision System               │
 ├─────────────────────────────────────────────────┤
-│  ورودی‌ها:                                      │
-│  • وضعیت باتری (محصول ۱ - مدیریت توان)         │
-│  • موقعیت/ناوبری (محصول ۲ - VIO)              │
-│  • داده‌های حسگر محیطی                         │
-│  • دستورات اپراتور                             │
+│  Inputs:                                        │
+│  • Battery status (Product 1 - power mgmt)      │
+│  • Position/navigation (Product 2 - VIO)        │
+│  • Environmental sensor data                    │
+│  • Operator commands                            │
 ├─────────────────────────────────────────────────┤
-│  هسته تصمیم‌گیری:                              │
-│  • محاسبه امتیاز ۶ حالت                        │
-│  • بهینه‌سازی چندهدفه                          │
-│  • انتخاب حالت برتر                            │
+│  Decision core:                                 │
+│  • Score calculation for 6 modes                │
+│  • Multi-objective optimization                 │
+│  • Best mode selection                          │
 ├─────────────────────────────────────────────────┤
-│  خروجی:                                         │
-│  • حالت عملیاتی انتخاب‌شده                     │
-│  • پارامترهای کنترل حالت                       │
-│  • گزارش‌های تصمیم‌گیری                        │
+│  Output:                                        │
+│  • Selected operating mode                      │
+│  • Mode control parameters                      │
+│  • Decision reports                             │
 └─────────────────────────────────────────────────┘
-2.2 ویژگی‌های اصلی
-ارزیابی چندمعیاره: ترکیب ۵ مؤلفه با وزن‌دهی پویا
+2.2 Key Features
+Multi-criteria evaluation: combining 5 components with dynamic weighting
 
-بهینه‌سازی چندهدفه: تعادل بین انرژی، موفقیت و بقا
+Multi-objective optimization: balance between energy, success and survival
 
-تطبیق‌پذیری: تنظیم وزن‌ها بر اساس اولویت مأموریت
+Adaptability: weights adjusted based on mission priority
 
-مقاوم‌سازی: تصمیم‌گیری در شرایط داده‌های ناقص
+Robustness: decision-making under incomplete data
 
-3. الزامات سیستم
-3.1 الزامات سخت‌افزاری
-مؤلفه	مشخصات
-پردازنده	STM32H7 (480 MHz)
-حافظه	۵۱۲ کیلوبایت رم
-ورودی‌ها	CAN, UART, SPI
-3.2 الزامات نرم‌افزاری
-پیاده‌سازی به زبان C++ با قابلیت بازپیکربندی
+3. System Requirements
+3.1 Hardware Requirements
+Component	Specification
+Processor	STM32H7 (480 MHz)
+Memory	512 KB RAM
+Inputs	CAN, UART, SPI
+3.2 Software Requirements
+Implemented in C++ with reconfigurability
 
-جدول وزن‌دهی قابل تنظیم در حین اجرا
+Weighting table adjustable at runtime
 
-لاگ‌گیری تمام تصمیم‌ها برای تحلیل پس‌وقوع
+Logging of all decisions for post-event analysis
 
-4. مشخصات عملکردی
-4.1 FR-1: محاسبه امتیاز حالت‌ها
-توضیح: محاسبه امتیاز هر یک از ۶ حالت بر اساس شرایط فعلی.
+4. Functional Specifications
+4.1 FR-1: Mode Score Calculation
+Description: Calculate the score of each of the 6 modes based on current conditions.
 
-فرمول امتیازدهی (بر اساس داده‌های سنتتیک):
+Scoring formula (based on synthetic data):
 
 text
 Score(mode) = Σ(w_i * normalized_factor_i)
-معیار پذیرش:
+Acceptance criteria:
 
-زمان محاسبه < ۵ms
+Computation time < 5 ms
 
-صحت انتخاب حالت > ۹۲% در شبیه‌سازی
+Mode selection accuracy > 92% in simulation
 
-4.2 FR-2: انتخاب حالت بهینه
-توضیح: انتخاب حالتی با بالاترین امتیاز و اعمال آن به سیستم کنترل.
+4.2 FR-2: Optimal Mode Selection
+Description: Select the mode with the highest score and apply it to the control system.
 
-معیار پذیرش:
+Acceptance criteria:
 
-زمان سوئیچ حالت < ۵۰ms
+Mode switch time < 50 ms
 
-جلوگیری از نوسان (hysteresis) با تأخیر ۵ ثانیه
+Oscillation prevention (hysteresis) with a 5-second delay
 
-4.3 FR-3: گزارش‌گیری و تحلیل
-توضیح: ثبت تمام تصمیم‌ها برای تحلیل و بهبود الگوریتم.
+4.3 FR-3: Reporting and Analysis
+Description: Record all decisions for analysis and algorithm improvement.
 
-معیار پذیرش:
+Acceptance criteria:
 
-ذخیره ۱۰۰۰ تصمیم آخر
+Store the last 1000 decisions
 
-خروجی قابل خواندن برای تحلیلگر
+Output readable by an analyst
 
-5. کد تولید داده - محصول سوم
+5. Data Generation Code - Product 3
 python
 # =====================================================
 # SRS - PRODUCT 3: MULTI-MODE ADAPTIVE DECISION SYSTEM
@@ -134,28 +134,28 @@ np.random.seed(2026)
 
 def generate_mission_decision_data():
     """
-    تولید داده‌های سناریوهای مأموریت با تصمیم‌گیری چندحالته
-    بر اساس SRS محصول سوم
+    Generates mission scenario data with multi-mode decision-making
+    Based on the SRS of product 3
     """
     
     num_scenarios = 400
     decision_data = []
     
-    # ====== تعریف حالت‌ها ======
+    # ====== Mode definitions ======
     modes = ['reconnaissance', 'surveillance', 'pursuit', 'loiter', 'return_home', 'engagement']
     mode_descriptions = {
-        'reconnaissance': 'شناسایی - جمع‌آوری اطلاعات اولیه',
-        'surveillance': 'نظارت - پایش مستمر منطقه',
-        'pursuit': 'تعقیب - دنبال کردن هدف متحرک',
-        'loiter': 'گشت‌زنی - انتظار در موقعیت تعیین‌شده',
-        'return_home': 'بازگشت - برگشت به پایگاه',
-        'engagement': 'درگیری - اقدام نهایی با هدف'
+        'reconnaissance': 'Reconnaissance - initial information gathering',
+        'surveillance': 'Surveillance - continuous area monitoring',
+        'pursuit': 'Pursuit - tracking a moving target',
+        'loiter': 'Loiter - waiting at a designated position',
+        'return_home': 'Return - returning to base',
+        'engagement': 'Engagement - final action on the target'
     }
     
     print("🚀 Generating Product 3 (Decision System) data...")
     
     for i in range(num_scenarios):
-        # ====== متغیرهای ورودی ======
+        # ====== Input variables ======
         battery_level = np.random.uniform(10, 100)
         threat_level = np.random.uniform(0, 1)
         comm_strength = np.random.uniform(0.1, 1.0)
@@ -163,15 +163,15 @@ def generate_mission_decision_data():
         mission_priority = np.random.choice(['critical', 'high', 'medium', 'low'], p=[0.15, 0.35, 0.30, 0.20])
         distance_to_home = np.random.uniform(0.5, 20)
         
-        # ====== شرایط محیطی ======
+        # ====== Environmental conditions ======
         weather = np.random.choice(['clear', 'cloudy', 'rain', 'fog'], p=[0.5, 0.25, 0.15, 0.10])
         time_of_day = np.random.choice(['day', 'dusk', 'night'])
-        wind_speed = np.random.exponential(5)  # متر بر ثانیه
+        wind_speed = np.random.exponential(5)  # meters per second
         
-        # ====== محاسبه امتیاز حالت‌ها ======
+        # ====== Mode score calculation ======
         scores = {}
         
-        # 1. Reconnaissance: شناسایی
+        # 1. Reconnaissance
         scores['reconnaissance'] = (
             (battery_level / 100) * 0.4 +
             (1 - threat_level) * 0.3 +
@@ -179,7 +179,7 @@ def generate_mission_decision_data():
             (1 - distance_to_home / 20) * 0.1
         )
         
-        # 2. Surveillance: نظارت
+        # 2. Surveillance
         scores['surveillance'] = (
             target_visibility * 0.5 +
             (1 - threat_level) * 0.2 +
@@ -187,7 +187,7 @@ def generate_mission_decision_data():
             (1 - wind_speed / 15) * 0.1
         )
         
-        # 3. Pursuit: تعقیب
+        # 3. Pursuit
         scores['pursuit'] = (
             target_visibility * 0.6 +
             (battery_level > 40) * 0.2 +
@@ -195,7 +195,7 @@ def generate_mission_decision_data():
             (comm_strength > 0.5) * 0.1
         )
         
-        # 4. Loiter: گشت‌زنی
+        # 4. Loiter
         scores['loiter'] = (
             (1 - comm_strength) * 0.3 +
             (threat_level > 0.7) * 0.3 +
@@ -203,7 +203,7 @@ def generate_mission_decision_data():
             (battery_level / 100) * 0.2
         )
         
-        # 5. Return Home: بازگشت
+        # 5. Return Home
         scores['return_home'] = (
             (1 - battery_level / 100) * 0.4 +
             threat_level * 0.3 +
@@ -211,7 +211,7 @@ def generate_mission_decision_data():
             (1 - comm_strength) * 0.1
         )
         
-        # 6. Engagement: درگیری
+        # 6. Engagement
         scores['engagement'] = (
             target_visibility * 0.5 +
             (threat_level > 0.6) * 0.3 +
@@ -220,7 +220,7 @@ def generate_mission_decision_data():
             (mission_priority == 'critical') * 0.2
         )
         
-        # ====== تنظیم وزن‌ها بر اساس اولویت مأموریت ======
+        # ====== Weight adjustment based on mission priority ======
         if mission_priority == 'critical':
             scores['engagement'] *= 1.3
             scores['surveillance'] *= 1.1
@@ -229,7 +229,7 @@ def generate_mission_decision_data():
             scores['return_home'] *= 1.2
             scores['reconnaissance'] *= 0.8
         
-        # ====== تأثیر شرایط محیطی ======
+        # ====== Environmental impact ======
         if weather == 'rain':
             for mode in ['surveillance', 'pursuit']:
                 scores[mode] *= 0.7
@@ -241,24 +241,24 @@ def generate_mission_decision_data():
             scores['reconnaissance'] *= 0.5
             scores['surveillance'] *= 0.7
         
-        # ====== انتخاب بهترین حالت ======
+        # ====== Best mode selection ======
         best_mode = max(scores, key=scores.get)
         best_score = scores[best_mode]
         
-        # ====== اطمینان تصمیم‌گیری ======
-        # بر اساس فاصله از دومین حالت برتر
+        # ====== Decision confidence ======
+        # Based on the gap to the second-best mode
         sorted_scores = sorted(scores.values(), reverse=True)
         confidence = 0.5 + 0.5 * (1 - (sorted_scores[1] / sorted_scores[0])) if len(sorted_scores) > 1 else 0.9
         confidence = min(0.99, max(0.3, confidence))
         
-        # ====== نویز تصمیم‌گیری (خطای سنسور یا پردازش) ======
-        if np.random.random() < 0.07 * (1 - confidence):  # خطا در شرایط نامطمئن
+        # ====== Decision noise (sensor or processing error) ======
+        if np.random.random() < 0.07 * (1 - confidence):  # error under uncertain conditions
             possible_modes = [m for m in modes if m != best_mode]
             best_mode = np.random.choice(possible_modes)
             best_score = scores[best_mode]
             confidence = confidence * 0.8
         
-        # ====== ذخیره رکورد ======
+        # ====== Save record ======
         decision_data.append({
             'scenario_id': i,
             'battery_level': round(battery_level, 1),
@@ -285,7 +285,7 @@ def generate_mission_decision_data():
     
     return pd.DataFrame(decision_data)
 
-# ========== تولید و ذخیره داده ==========
+# ========== Generate and save data ==========
 print("\n" + "="*60)
 print("PRODUCT 3 - MISSION DECISION SYSTEM DATA")
 print("="*60)
@@ -293,7 +293,7 @@ print("="*60)
 df_decision = generate_mission_decision_data()
 df_decision.to_csv('mission_decision_data.csv', index=False)
 
-# ========== تحلیل داده ==========
+# ========== Data analysis ==========
 print(f"\n📊 Total scenarios: {len(df_decision)}")
 print(f"Modes distribution:")
 print(df_decision['selected_mode'].value_counts())

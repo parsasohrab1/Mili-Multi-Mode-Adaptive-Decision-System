@@ -105,4 +105,4 @@ Linux: replace `C:/mili-build` with `build`.
 
 ---
 
-*گزارش پذیرش نهایی (ATP): خروجی لاگ تصمیم باید قابل استخراج (CSV/JSON/UART)، قابل تحلیل با ابزار Python، و در embedded بدون تخصیص پویا ذخیره شود.*
+*Final acceptance report (ATP): the decision log output must be extractable (CSV/JSON/UART), analyzable with Python tools, and stored in embedded without dynamic allocation.*
